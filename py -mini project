@@ -1,0 +1,98 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+
+
+def weather_mini_project():
+    try:
+        df = pd.read_csv(r'C:\Users\hplap\OneDrive\Documents\weather.csv')
+        df.columns = df.columns.str.strip()
+
+        metrics_list = [('Temperature', '°C', '#e74c3c'),
+                        ('Humidity', '%', '#3498db'),
+                        ('Rainfall', 'mm', '#2ecc71')]
+
+        all_cols = ['Temperature', 'Humidity', 'Rainfall', 'Windspeed']
+        for col in all_cols:
+            df[col] = pd.to_numeric(df[col].astype(str).str.strip(), errors='coerce').fillna(0)
+
+        df['Date_dt'] = pd.to_datetime(df['Date'], dayfirst=True)
+        df = df.sort_values(by='Date_dt')
+
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        return
+
+    while True:
+        print("\n" + "=" * 45 + "\n🌤️  WEATHER ANALYTICS DASHBOARD\n" + "=" * 45)
+        print("1. Search Weather (Pie Chart)")
+        print("2. Daily Trend Analysis (Bar Chart)")
+        print("3. View Full Monthly Summary (All Metrics)")
+        print("4. Exit")
+
+        choice = input("\nSelect Option (1-4): ").strip()
+
+        if choice == '1':
+            search_date = input("Enter Date (DD-MM-YYYY): ").strip()
+            res = df[df['Date'] == search_date]
+            if not res.empty:
+                t, h, r = res['Temperature'].values[0], res['Humidity'].values[0], res['Rainfall'].values[0]
+                print(f"\n✅ {search_date}: Temp: {t}°C | Hum: {h}% | Rain: {r}mm")
+                plt.figure(figsize=(6, 5))
+                plt.pie([t, h, r], labels=['Temp', 'Hum', 'Rain'], autopct='%1.1f%%',
+                        colors=['#ff9999', '#66b3ff', '#99ff99'])
+                plt.title(f"Weather Breakdown - {search_date}")
+                plt.show()
+
+        elif choice == '2':
+            print("\n--- Select Metric for Daily Trend ---")
+            print("1. Temperature\n2. Humidity\n3. Rainfall")
+            sub = input("Enter Choice (1-3): ").strip()
+            metrics_dict = {'1': 'Temperature', '2': 'Humidity', '3': 'Rainfall'}
+            if sub in metrics_dict:
+                m = metrics_dict[sub]
+                plt.figure(figsize=(10, 5))
+                plt.bar(df['Date'], df[m], color='skyblue')
+                plt.title(f"Daily {m} Trend")
+                plt.xticks(rotation=45)
+                plt.show()
+
+        elif choice == '3':
+            print("\n📊 Loading Full Monthly Summary (Sequential Viewing)...")
+
+            for m, unit, color in metrics_list:
+                mx = df[m].max()
+                mn = df[m].min()
+                ag = df[m].mean()
+
+                print(f"\n>>> Displaying {m} Statistics...")
+                print(f"📌 Max: {mx}{unit} | Min: {mn}{unit} | Avg: {ag:.2f}{unit}")
+
+                plt.figure(figsize=(8, 6))
+                bars = plt.bar(['Maximum', 'Minimum', 'Average'], [mx, mn, ag],
+                               color=[color, '#95a5a6', '#bdc3c7'])
+
+                for bar in bars:
+                    yval = bar.get_height()
+                    plt.text(bar.get_x() + bar.get_width() / 2, yval + 0.1,
+                             f"{yval:.1f}{unit}", ha='center', va='bottom', fontweight='bold')
+
+                plt.title(f"Monthly {m} Summary ({unit})", fontsize=14, fontweight='bold')
+                plt.ylabel(unit)
+                plt.grid(axis='y', linestyle='--', alpha=0.3)
+
+                print(f"ℹ️  Close the {m} graph window to see the next one...")
+                plt.show()
+
+            print("\n✅ All summaries viewed. Returning to main menu.")
+
+        elif choice == '4':
+            print("Project Closed. 👋")
+            break
+
+        input("\nPress Enter to return to Menu...")
+
+
+if __name__ == "__main__":
+    weather_mini_project()
